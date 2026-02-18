@@ -1,0 +1,11 @@
+# config.yaml
+threshold: 100
+max_angle_error: 30
+min_lightbar_ratio: 2.0
+max_lightbar_ratio: 10.0
+min_lightbar_length: 10
+min_armor_ratio: 1.5
+max_armor_ratio: 5.0
+max_side_ratio: 3.0
+min_confidence: 0.5
+max_rectangular_error: 10
