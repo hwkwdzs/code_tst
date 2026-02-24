@@ -1,0 +1,60 @@
+add_executable(main 
+    main.cpp
+    detector.cpp
+    armor.cpp
+    classifier.cpp
+    tools/logger.cpp
+    tools/img_tools.cpp
+)
+
+target_link_libraries(main 
+    ${OpenCV_LIBS}
+    yaml-cpp
+    openvino::runtime
+    # fmt          <-- 注释掉！
+    stdc++fs
+)
+
+target_include_directories(main PRIVATE
+    ${OpenCV_INCLUDE_DIRS}
+    /usr/include/yaml-cpp
+    /usr/include/eigen3
+    # /usr/include/fmt  <-- 注释掉！
+    ${CMAKE_SOURCE_DIR}
+)cmake_minimum_required(VERSION 3.16)
+set(OpenVINO_DIR "/home/gaoyuhang/.local/lib/python3.10/site-packages/openvino/cmake")
+project(auto_aim)
+
+# 开启 C++17 (支持 filesystem)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+find_package(OpenVINO REQUIRED COMPONENTS Runtime)
+find_package(OpenCV REQUIRED)
+find_package(yaml-cpp REQUIRED)
+
+# 收集所有源文件
+add_executable(main 
+    main.cpp
+    detector.cpp
+    armor.cpp
+    classifier.cpp
+    tools/logger.cpp
+    tools/img_tools.cpp
+)
+
+target_link_libraries(main 
+    ${OpenCV_LIBS}
+    yaml-cpp
+    openvino::runtime
+    fmt
+    stdc++fs  # 修复 filesystem 链接错误
+)
+
+target_include_directories(main PRIVATE
+    ${OpenCV_INCLUDE_DIRS}
+    /usr/include/yaml-cpp
+    /usr/include/eigen3
+    /usr/include/fmt
+    ${CMAKE_SOURCE_DIR}
+)
