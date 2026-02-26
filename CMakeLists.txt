@@ -5,15 +5,17 @@ project(auto_aim)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# 1. 使用 pkg-config 获取 OpenCV 信息 (最可靠)
+# 1. 获取 OpenCV 信息
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(OPENCV REQUIRED opencv4)
 
-# 2. 查找其他库
+# 2. 查找 yaml-cpp (只为了获取路径)
 find_package(yaml-cpp REQUIRED)
+
+# 3. 查找 OpenVINO
 find_package(OpenVINO REQUIRED COMPONENTS Runtime)
 
-# 3. 收集源文件
+# 4. 收集源文件
 add_executable(main 
     main.cpp
     detector.cpp
@@ -23,34 +25,35 @@ add_executable(main
     tools/img_tools.cpp
 )
 
-# 4. 【关键】显式链接所有需要的库
-# 注意顺序：依赖多的在前，依赖少的在后
-target_link_libraries(main 
-    # OpenCV 核心模块 (按依赖关系排序)
-    ${OPENCV_LIBRARIES} 
-    
-    # yaml-cpp
-    yaml-cpp
-    
-    # OpenVINO
+# 5. 【关键】构建明确的库列表
+# 使用 ${OPENCV_LIBRARIES} 展开所有 opencv 库
+# 使用 ${yaml-cpp_LIBRARIES} 或手动指定 yaml-cpp 路径
+set(MY_LIBS
+    ${OPENCV_LIBRARIES}
+    ${yaml-cpp_LIBRARIES}  # 尝试使用 CMake 找到的变量
     openvino::runtime
-    
-    # C++ 文件系统支持
     stdc++fs
 )
 
-# 5. 包含目录
+# 如果上面 yaml-cpp 变量为空，手动 fallback 到常见路径 (可选)
+if("${yaml-cpp_LIBRARIES}" STREQUAL "")
+    list(APPEND MY_LIBS /lib/x86_64-linux-gnu/libyaml-cpp.so)
+endif()
+
+# 6. 链接库
+target_link_libraries(main ${MY_LIBS})
+
+# 7. 包含目录
 target_include_directories(main PRIVATE
     ${OPENCV_INCLUDE_DIRS}
-    /usr/include/yaml-cpp
+    ${yaml-cpp_INCLUDE_DIRS}
     /usr/include/eigen3
     ${CMAKE_SOURCE_DIR}
 )
 
-# 6. 【关键】强制链接器去正确的目录找库
-link_directories(${OPENCV_LIBRARY_DIRS})
-
-# 7. 打印调试信息 (方便查看到底链接了什么)
-message(STATUS "OpenCV Libraries: ${OPENCV_LIBRARIES}")
-message(STATUS "OpenCV Include Dirs: ${OPENCV_INCLUDE_DIRS}")
-message(STATUS "OpenCV Library Dirs: ${OPENCV_LIBRARY_DIRS}")
+# 8. 打印调试信息
+message(STATUS "=== DEBUG INFO ===")
+message(STATUS "OpenCV Libs: ${OPENCV_LIBRARIES}")
+message(STATUS "yaml-cpp Libs: ${yaml-cpp_LIBRARIES}")
+message(STATUS "Final Link Libs: ${MY_LIBS}")
+message(STATUS "==================")

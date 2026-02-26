@@ -10,7 +10,7 @@
 // 现在再包含其他头文件
 #include <opencv2/opencv.hpp>
 #include <yaml-cpp/yaml.h>
-#include <openvino/openvino.hpp>
+#include <numeric>  // 用于 std::accumulate
 
 // ... 下面是你原来的代码 ...// 1. 先包含标准库头文件
 #include <iostream>
@@ -22,7 +22,8 @@
 #include <opencv2/opencv.hpp>
 
 // 3. 最后包含项目头文件
-#include "detector.hpp"#include <iostream>
+#include "detector.hpp"
+#include <iostream>
 #include <opencv2/opencv.hpp>
 #include "detector.hpp"
 

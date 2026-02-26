@@ -1,3 +1,4 @@
+#include <numeric>
 #include "detector.hpp"
 
 #include <yaml-cpp/yaml.h>
