@@ -1,14 +1,14 @@
 # 检测器参数
-threshold: 150
-max_angle_error: 30
-min_lightbar_ratio: 0.1
-max_lightbar_ratio: 0.8
+threshold: 200
+max_angle_error: 45
+min_lightbar_ratio: 1.5
+max_lightbar_ratio: 20
 min_lightbar_length: 10
-min_armor_ratio: 0.5
-max_armor_ratio: 5.0
-max_side_ratio: 0.3
-min_confidence: 0.6
-max_rectangular_error: 15
+min_armor_ratio: 1
+max_armor_ratio: 5
+max_side_ratio: 1.5
+min_confidence: 0.5
+max_rectangular_error: 25
 
 # 分类器参数
 yolo_name: "yolov5"

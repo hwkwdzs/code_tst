@@ -379,17 +379,60 @@ void Detector::show_result(
     tools::draw_points(detection, lightbar.points, cv::Scalar(0, 255, 255), 3);
   }
 
-  for (const auto & armor : armors) {
-    // 替换 fmt::format -> sprintf
+    for (const auto & armor : armors) {
+    // --- 1. 准备格式化文字 ---
     char info_buf[150];
-    sprintf(info_buf, "%.2f %.2f %.1f %.2f %s %s", 
-            armor.ratio, armor.side_ratio,
-            armor.rectangular_error * 57.3, armor.confidence, 
-            ARMOR_NAMES[armor.name].c_str(), ARMOR_TYPES[armor.type].c_str());
+    sprintf(info_buf, "%s (%.2f)", 
+            ARMOR_NAMES[armor.name].c_str(), armor.confidence);
     std::string info(info_buf);
 
-    tools::draw_points(detection, armor.points, cv::Scalar(0, 255, 0));
-    tools::draw_text(detection, info, armor.left.bottom, cv::Scalar(0, 255, 0));
+    // --- 2. 提取四个角点 (左上，右上，右下，左下) ---
+    // 注意：armor.points 的顺序通常是 0:TL, 1:TR, 2:BR, 3:BL
+    std::vector<cv::Point> pts = {
+        armor.points[0], 
+        armor.points[1], 
+        armor.points[2], 
+        armor.points[3]
+    };
+
+    // --- 3. 画闭合的绿色大框 (核心修改！) ---
+    // true 表示闭合多边形，线宽为 2
+    cv::polylines(detection, pts, true, cv::Scalar(0, 255, 0), 2);
+
+    // --- 4. (可选) 填充半透明绿色，让框更醒目 ---
+    // 创建蒙版
+    std::vector<std::vector<cv::Point>> poly = {pts};
+    cv::Mat mask = cv::Mat::zeros(detection.size(), CV_8UC1);
+    cv::fillPoly(mask, poly, cv::Scalar(255));
+    
+    // 融合颜色 (alpha=0.2，轻微绿色填充)
+    cv::Scalar color = cv::Scalar(0, 255, 0);
+    for (int y = 0; y < detection.rows; ++y) {
+        for (int x = 0; x < detection.cols; ++x) {
+            if (mask.at<uchar>(y, x)) {
+                cv::Vec3b &pixel = detection.at<cv::Vec3b>(y, x);
+                pixel[0] = pixel[0] * 0.8 + color[0] * 0.2; // B
+                pixel[1] = pixel[1] * 0.8 + color[1] * 0.2; // G
+                pixel[2] = pixel[2] * 0.8 + color[2] * 0.2; // R
+            }
+        }
+    }
+    // 注意：上面的像素级循环比较慢，如果卡顿，可以注释掉填充部分，只保留 polylines
+
+    // --- 5. 在框的上方写文字 ---
+    // 计算文字位置：取左上和右上的中点，再往上移 10 像素
+    cv::Point text_pos = (armor.points[0] + armor.points[1]) / 2;
+    text_pos.y -= 10;
+
+    // 画黑色背景底框
+    int baseline = 0;
+    cv::Size textSize = cv::getTextSize(info, cv::FONT_HERSHEY_SIMPLEX, 0.6, 2, &baseline);
+    cv::Point tl_bg = cv::Point(text_pos.x - textSize.width/2 - 2, text_pos.y - textSize.height - 2);
+    cv::Point br_bg = cv::Point(text_pos.x + textSize.width/2 + 2, text_pos.y + baseline + 2);
+    cv::rectangle(detection, tl_bg, br_bg, cv::Scalar(0, 0, 0), -1); // 黑色填充
+
+    // 画白色文字
+    cv::putText(detection, info, text_pos, cv::FONT_HERSHEY_SIMPLEX, 0.6, cv::Scalar(255, 255, 255), 2);
   }
 
   cv::Mat binary_img2;
