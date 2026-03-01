@@ -279,16 +279,35 @@ bool Detector::check_type(const Armor & armor) const
   return name_ok;
 }
 
-Color Detector::get_color(const cv::Mat & bgr_img, const std::vector<cv::Point> & contour) const
-{
-  int red_sum = 0, blue_sum = 0;
+Color Detector::get_color(const cv::Mat & bgr_img, const std::vector<cv::Point> & contour) const {
+    int red_sum = 0, blue_sum = 0, green_sum = 0;
+    int count = 0;
 
-  for (const auto & point : contour) {
-    red_sum += bgr_img.at<cv::Vec3b>(point)[2];
-    blue_sum += bgr_img.at<cv::Vec3b>(point)[0];
-  }
+    for (const auto & point : contour) {
+        cv::Vec3b pixel = bgr_img.at<cv::Vec3b>(point);
+        blue_sum += pixel[0];
+        green_sum += pixel[1]; // 注意：BGR 格式，绿色在中间
+        red_sum += pixel[2];
+        count++;
+    }
 
-  return blue_sum > red_sum ? Color::blue : Color::red;
+    // 计算平均值
+    float r = red_sum / count;
+    float g = green_sum / count;
+    float b = blue_sum / count;
+
+    // 【核心逻辑】判断颜色纯度
+    // 如果是白光，R≈G≈B。如果是蓝光，B >> R 且 B >> G。
+    
+    if (b > r * 1.5 && b > g * 1.5) { 
+        return Color::blue; 
+    }
+    if (r > b * 1.5 && r > g * 1.5) { 
+        return Color::red; 
+    }
+
+    // 如果都不满足，说明是白光/黄光（天花板灯），直接返回“非装甲板颜色”
+    return Color::none; // 你需要在 enum 里加一个 none，或者在调用处判断
 }
 
 cv::Mat Detector::get_pattern(const cv::Mat & bgr_img, const Armor & armor) const

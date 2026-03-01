@@ -1,7 +1,7 @@
 # 检测器参数
 threshold: 200
 max_angle_error: 45
-min_lightbar_ratio: 1.5
+min_lightbar_ratio: 3.0
 max_lightbar_ratio: 20
 min_lightbar_length: 10
 min_armor_ratio: 1

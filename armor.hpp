@@ -13,7 +13,8 @@ enum Color
   red,
   blue,
   extinguish,
-  purple
+  purple,
+  none
 };
 const std::vector<std::string> COLORS = {"red", "blue", "extinguish", "purple"};
 
